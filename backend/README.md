@@ -1,0 +1,8 @@
+"# E-Learning Platform Backend" 
+"" 
+"## Setup" 
+"" 
+"1. Create virtual environment: \`uv venv\`" 
+"2. Activate: \`.venv\\Scripts\\activate\` (Windows)" 
+"3. Sync dependencies: \`uv sync\`" 
+"4. Run: \`uvicorn app.main:app --reload\`" 
