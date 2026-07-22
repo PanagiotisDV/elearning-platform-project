@@ -1,1 +1,1 @@
-# SchoolApp-final-exam
+# e-learning-platform-project
