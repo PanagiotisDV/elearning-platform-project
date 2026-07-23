@@ -1,0 +1,27 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
+venv/
+ENV/
+dist/
+build/
+
+# UV
+uv.lock
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+
+# Logs
+*.log
