@@ -1,47 +1,53 @@
 
 """
-ΣΥΝΔΕΣΗ ΣΤΗ ΒΑΣΗ ΔΕΔΟΜΕΝΩΝ
+ΑΣΥΓΧΡΟΝΗ ΣΥΝΔΕΣΗ ΣΤΗ ΒΑΣΗ ΔΕΔΟΜΕΝΩΝ
 Δημιουργεί τη σύνδεση με PostgreSQL
 """
 
 
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,      
+    AsyncSession,              
+    async_sessionmaker        
+)
+from sqlalchemy.orm import declarative_base
 from app.core.config import settings
 
 
-
-engine = create_engine(
+engine = create_async_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
-        echo=settings.ENVIRONMENT == "development",
-    
-)
+    echo=settings.ENVIRONMENT == "development",
+    pool_size=10,
+    max_overflow=20,
+)    
 
 
-SessionLocal = sessionmaker(
+AsyncSessionLocal = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
     autocommit=False,
     autoflush=False,
-    bind=engine,
-   
+    
 )
-
 
 Base = declarative_base()
 
 
-
-def get_db():
-    """
-    Δημιουργεί μια συνεδρία σε κάθε request
-    Κλείνει αυτόματα τη συνεδρία όταν τελειώσει
-    """
-    db = SessionLocal()
-  
-    try:
-        yield db
+async def get_db() -> AsyncSession:
    
-    finally:
-        db.close()
-     
+    async with AsyncSessionLocal() as session:
+               
+        try:
+            yield session
+            await session.commit()
+                        
+        except Exception:
+            await session.rollback()
+                       
+            raise
+            
+        finally:
+            await session.close()
+           
