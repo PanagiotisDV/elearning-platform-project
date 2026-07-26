@@ -9,7 +9,8 @@ venv/
 ENV/
 dist/
 build/
-
+.env/
+.env
 # UV
 uv.lock
 
