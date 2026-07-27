@@ -1,15 +1,16 @@
 """
 Δημιουργία ασύγχρονης εφαρμογής backend E-learning platform.
 """
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from app.core.config import settings
 from app.db.database import create_tables
+from app.api.routes import auth  
 import logging
 import time
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,26 +18,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Διαχείριση κύκλου ζωής"""
-    logger.info("🚀 Starting application...")
+    logger.info(" Starting application...")
     await create_tables()
     yield
-    logger.info("🛑 Shutting down application...")
+    logger.info(" Shutting down application...")
 
 
 app = FastAPI(
     title="E-Learning Platform API",
     description="Online courses platform with authentication",
     version="1.0.0",
-    docs_url="/api/docs",      # ← Swagger εδώ
-    redoc_url="/api/redoc",    # ← ReDoc εδώ
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
     lifespan=lifespan,
 )
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,70 +49,41 @@ app.add_middleware(
     allowed_hosts=["localhost", "127.0.0.1"],
 )
 
-
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
     client_ip = request.client.host if request.client else "unknown"
-    logger.info(f"📝 {request.method} {request.url.path} from {client_ip}")
+    logger.info(f" {request.method} {request.url.path} from {client_ip}")
     response = await call_next(request)
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)
-    logger.info(f"✅ {request.method} {request.url.path} - {response.status_code} ({process_time:.3f}s)")
+    logger.info(f" {request.method} {request.url.path} - {response.status_code} ({process_time:.3f}s)")
     return response
 
+app.include_router(
+    auth.router, 
+    prefix="/api/auth", 
+    tags=["Authentication"]
+)
 
 @app.get("/")
 async def root(request: Request):
-    
     return {
         "message": "Welcome to E-Learning Platform API",
         "environment": settings.ENVIRONMENT,
         "version": "1.0.0",
         "client_ip": request.client.host if request.client else "unknown",
         "docs": "/api/docs",
-        "redoc": "/api/redoc",
     }
 
-
 @app.get("/api/health")
-async def  health_check() -> dict[str, str]:
-    
+async def health_check():
     return {
         "status": "healthy",
         "environment": settings.ENVIRONMENT,
         "version": "1.0.0",
     }
 
-
-@app.get("/welcome")
-async def welcome()-> dict[str, str]:
-   
-    return {"message": "Welcome to the E-Learning Platform!"}
-
-
-@app.get("/api/info")
-async def get_info()-> dict[str, Any]:
-    """
-    Πληροφορίες  API
-    """
-    return {
-        "name": "E-Learning Platform API",
-        "version": "1.0.0",
-        "description": "Online courses platform with authentication and progress tracking",
-        "endpoints": {
-            "docs": "/api/docs",
-            "health": "/api/health",
-            "welcome": "/welcome",
-            "info": "/api/info",
-        }
-    }
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-    )
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
