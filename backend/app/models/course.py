@@ -2,7 +2,6 @@
 ΜΟΝΤΕΛΟ ΜΑΘΗΜΑΤΟΣ - ΠΙΝΑΚΑΣ COURSES
 """
 
-Σ
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -10,9 +9,7 @@ from app.db.session import Base
    
 
 class Course(Base):
-    """
-    Ο πίνακας courses στη βάση
-    """
+    
     __tablename__ = "courses"
       
     id = Column(Integer, primary_key=True, index=True)
