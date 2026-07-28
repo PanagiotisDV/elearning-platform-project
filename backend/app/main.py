@@ -9,7 +9,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from app.core.config import settings
 from app.db.database import create_tables
-from app.api.routes import auth  
+from app.api.routes import auth , courses 
 import logging
 import time
 
@@ -71,6 +71,13 @@ app.include_router(
     prefix="/api/auth", 
     tags=["Authentication"]
 )
+
+app.include_router(
+    courses.router,  
+    prefix="/api/courses",  
+    tags=["Courses"]
+)
+
 
 @app.get("/")
 async def root(request: Request):
