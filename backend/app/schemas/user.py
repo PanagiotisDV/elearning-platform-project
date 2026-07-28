@@ -21,21 +21,21 @@ class UserCreate(BaseModel):
    
     email: EmailStr = Field(
         ..., 
-        description="Το email του χρήστη"
+        description="email του χρήστη"
     )
     password: str = Field(
         ..., 
         min_length=8,
-        description="Ο κωδικός (τουλάχιστον 8 χαρακτήρες)"
+        description="κωδικός (τουλάχιστον 8 χαρακτήρες)"
     )
     full_name: str = Field(
         ...,
-        description="Το πλήρες όνομα"
+        description="πλήρες όνομα"
     )
     
     role: UserRole = Field(
         default=UserRole.STUDENT,
-        description="Ο ρόλος του χρήστη"
+        description="ρόλος του χρήστη"
     )
         
    
@@ -51,7 +51,7 @@ class UserCreate(BaseModel):
             raise ValueError(' κωδικός εμπεριέχει ένα μικρό γράμμα')
         
         if not re.search(r'\d', v):
-            raise ValueError('κωδικός εμπεριέχει έχει έναν αριθμό')
+            raise ValueError('κωδικός εμπεριέχει έναν αριθμό')
         
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
             raise ValueError('κωδικός εμπεριέχει έναν ειδικό χαρακτήρα')

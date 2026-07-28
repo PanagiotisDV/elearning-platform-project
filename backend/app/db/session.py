@@ -8,19 +8,16 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from app.core.config import settings
 
-# ===== ΠΑΡΕ ΤΟ URL ΚΑΙ ΚΑΘΑΡΙΣΕ ΤΟ =====
-DATABASE_URL = settings.DATABASE_URL
 
-# ΑΦΑΙΡΕΣΕ ΤΟ "DATABASE_URL=" ΑΝ ΥΠΑΡΧΕΙ
+DATABASE_URL = settings.DATABASE_URL.strip()
+
+
 if DATABASE_URL.startswith("DATABASE_URL="):
     DATABASE_URL = DATABASE_URL.replace("DATABASE_URL=", "")
 
-# ΑΦΑΙΡΕΣΕ ΤΥΧΟΝ ΚΕΝΑ
-DATABASE_URL = DATABASE_URL.strip()
 
 print(f"📌 Clean URL: {DATABASE_URL}")
 
-# ===== ΔΗΜΙΟΥΡΓΙΑ ENGINE =====
 engine = create_async_engine(
     DATABASE_URL,
     pool_pre_ping=True,
@@ -31,7 +28,7 @@ engine = create_async_engine(
 
 print("✅ Engine created successfully!")
 
-# ===== SESSION =====
+
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,
@@ -40,10 +37,10 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
-# ===== BASE =====
+
 Base = declarative_base()
 
-# ===== DEPENDENCY =====
+
 async def get_db() -> AsyncSession:
     async with AsyncSessionLocal() as session:
         try:

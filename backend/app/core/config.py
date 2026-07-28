@@ -12,11 +12,7 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    """
-    Όλες τις ρυθμίσεις της εφαρμογής
-    Κάθε ιδιότητα διαβάζεται από το .env
-    """
-    
+     
    
     DATABASE_URL: str
     SECRET_KEY: str
