@@ -17,6 +17,7 @@ class Course(Base):
     description = Column(Text, nullable=True)
     instructor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     instructor = relationship("User", back_populates="courses")
+    lessons = relationship("Lesson", back_populates="course", cascade="all, delete-orphan")
     is_published = Column(Boolean, default=False)
     level = Column(String(50), default="beginner")
     #     beginner, intermediate, advanced
@@ -24,6 +25,4 @@ class Course(Base):
     #    e.g. "Programming", "Design", "Business"
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    lessons = relationship("Lesson", back_populates="course", cascade="all, delete-orphan")
-    enrollments = relationship("Enrollment", back_populates="course")
     
