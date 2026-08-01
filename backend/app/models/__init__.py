@@ -12,5 +12,8 @@ __all__ = [
     "UserRole",
     "Course",
     "Lesson",  
+    "Enrollment",
+    "EnrollmentStatus",
+    "Progress",
     "RefreshToken",
 ] 
