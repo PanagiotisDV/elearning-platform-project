@@ -3,15 +3,18 @@
 """
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from app.core.config import settings
 from app.db.database import create_tables
-from app.api.routes import auth , courses 
+from app.api.routes import auth , courses , lessons,enrollments
+from app.api.deps import get_current_active_user
 import logging
 import time
+
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -73,9 +76,22 @@ app.include_router(
 )
 
 app.include_router(
-    courses.router,  
-    prefix="/api/courses",  
-    tags=["Courses"]
+    courses.router, 
+    prefix="/api/courses", 
+    tags=["Courses"],
+    dependencies=[Depends(get_current_active_user)] 
+)
+
+app.include_router(
+    lessons.router,
+    prefix="/api", 
+    tags=["Lessons"]
+)
+
+app.include_router(
+    enrollments.router,
+    prefix="/api",
+    tags=["Enrollments"]
 )
 
 
