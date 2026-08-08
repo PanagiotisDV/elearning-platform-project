@@ -9,7 +9,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from app.core.config import settings
 from app.db.database import create_tables
-from app.api.routes import auth , courses , lessons,enrollments,progress
+from app.api.routes import auth , courses , lessons,enrollments,progress, quizzes
 from app.api.deps import get_current_active_user
 import logging
 import time
@@ -98,6 +98,12 @@ app.include_router(
     progress.router,
     prefix="/api",
     tags=["Progress"]
+)
+
+app.include_router(
+    quizzes.router,
+    prefix="/api",
+    tags=["Quizzes"]
 )
 
 
