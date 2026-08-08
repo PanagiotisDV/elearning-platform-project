@@ -281,6 +281,49 @@ async def logout(
     return {"message": "Successfully logged out"}
 
 
+
+@router.post("/login-form", response_model=Token)
+async def login_form(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db)
+):
+    """Login για Swagger UI (δέχεται form data)"""
+    result = await db.execute(
+        select(User).where(User.email == form_data.username.lower())
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password"
+        )
+    
+    access_token = create_access_token(data={"sub": str(user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
+    
+    refresh_token_expires = get_utc_now() + timedelta(
+        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+    )
+    
+    new_refresh_token = RefreshToken(
+        user_id=user.id,
+        token=refresh_token,
+        expires_at=refresh_token_expires,
+        created_at=get_utc_now()
+    )
+    
+    db.add(new_refresh_token)
+    await db.commit()
+    
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+
+
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
     current_user: User = Depends(get_current_user),

@@ -91,7 +91,7 @@ class CourseResponse(BaseModel):
     title: str
     description: Optional[str]
     instructor_id: int
-    instructor_name: Optional[str] = None  # Θα το προσθέσουμε στο endpoint
+    instructor_name: Optional[str] = None  
     is_published: bool
     level: str
     category: Optional[str]

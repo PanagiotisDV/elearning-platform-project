@@ -30,3 +30,7 @@ uv.lock
 # Alembic (περιέχει κωδικούς)
 alembic.ini
 
+FIX_SUMMARY.md
+PROJECT_STATUS.md
+PRPOJECT_STATUS2.md 
+changes.md   

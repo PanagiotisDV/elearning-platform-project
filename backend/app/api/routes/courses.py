@@ -13,18 +13,24 @@ from app.db.session import get_db
 from app.models.user import User
 from app.models.course import Course
 from app.schemas.course import CourseCreate, CourseUpdate, CourseResponse, CourseListResponse
-from app.api.deps import get_current_active_user, require_role
+from app.api.deps import get_current_active_user 
 
 
 router = APIRouter()
+
 
 @router.post("/", response_model=CourseResponse, status_code=status.HTTP_201_CREATED)
 async def create_course(
     course_data: CourseCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("instructor"))
-   
+    current_user: User = Depends(get_current_active_user),
 ):
+    if current_user.role.value not in ["instructor", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to create courses"
+        )
+
     """
     ΔΗΜΙΟΥΡΓΙΑ ΝΕΟΥ ΜΑΘΗΜΑΤΟΣ
     Μόνο instructors και admins
@@ -37,7 +43,7 @@ async def create_course(
         category=course_data.category.strip() if course_data.category else None,
         is_published=course_data.is_published,
         instructor_id=current_user.id
-        
+    )    
     db.add(new_course)
     await db.commit()
     await db.refresh(new_course)
@@ -148,8 +154,14 @@ async def update_course(
     course_id: int,
     course_data: CourseUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("instructor"))
+    current_user: User = Depends(get_current_active_user),
 ):
+    if current_user.role.value not in ["instructor", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only instructors or admins can update courses"
+        )
+
     """
     ΕΝΗΜΕΡΩΣΗ ΜΑΘΗΜΑΤΟΣ
     Μόνο ο instructor που το δημιούργησε ή admin
@@ -187,8 +199,14 @@ async def update_course(
 async def delete_course(
     course_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("instructor"))
+        current_user: User = Depends(get_current_active_user),
 ):
+    if current_user.role.value not in ["instructor", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only instructors or admins can delete courses"
+        )
+
     """
     ΔΙΑΓΡΑΦΗ ΜΑΘΗΜΑΤΟΣ
     Μόνο ο instructor που το δημιούργησε ή admin
