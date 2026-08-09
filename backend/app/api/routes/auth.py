@@ -1,4 +1,3 @@
-# backend/app/api/routes/auth.py
 """
 AUTHENTICATION ENDPOINTS
 Register, Login, Get Current User
