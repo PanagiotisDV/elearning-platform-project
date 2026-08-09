@@ -1,4 +1,4 @@
-
+# backend/app/api/routes/auth.py
 """
 AUTHENTICATION ENDPOINTS
 Register, Login, Get Current User
@@ -30,19 +30,21 @@ def get_utc_now() -> datetime:
     """Returns current UTC datetime without timezone info (για αποθήκευση σε DB)"""
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
+
+# ========================================
+# REGISTER
+# ========================================
 @router.post("/register", response_model=UserResponse)
 async def register(
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db)
 ):
-
     if len(user_data.password) < 8:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password must be at least 8 characters long"
         )
     
-  
     result = await db.execute(
         select(User).where(User.email == user_data.email.lower())
     )
@@ -54,7 +56,6 @@ async def register(
             detail="Email already registered"
         )
     
-   
     hashed_password = get_password_hash(user_data.password)
     role_value = user_data.role.value if hasattr(user_data.role, "value") else user_data.role
     model_role = UserRole(role_value)
@@ -73,25 +74,28 @@ async def register(
     return new_user
 
 
+# ========================================
+# LOGIN (JSON) - Για frontend
+# ========================================
 @router.post("/login", response_model=Token)
 async def login(
     user_data: UserLogin,
     db: AsyncSession = Depends(get_db)
 ):
-   
+    """
+    LOGIN - Δέχεται JSON (για frontend)
+    """
     result = await db.execute(
         select(User).where(User.email == user_data.email.lower())
     )
     user = result.scalar_one_or_none()
     
-   
     if not user or not verify_password(user_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
         )
     
-   
     access_token = create_access_token(
         data={"sub": str(user.id)}
     )
@@ -99,7 +103,6 @@ async def login(
         data={"sub": str(user.id)}
     )
     
-   
     refresh_token_expires = get_utc_now() + timedelta(
         days=settings.REFRESH_TOKEN_EXPIRE_DAYS
     )
@@ -121,6 +124,9 @@ async def login(
     }
 
 
+# ========================================
+# LOGIN-FORM - Για Swagger UI
+# ========================================
 @router.post("/login-form", response_model=Token)
 async def login_form(
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -130,12 +136,10 @@ async def login_form(
     LOGIN - Δέχεται form data (για Swagger UI)
     Χρησιμοποιεί username/password από το OAuth2 form
     """
-
     result = await db.execute(
         select(User).where(User.email == form_data.username.lower())
     )
     user = result.scalar_one_or_none()
-    
     
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -143,7 +147,6 @@ async def login_form(
             detail="Incorrect email or password"
         )
     
-
     access_token = create_access_token(
         data={"sub": str(user.id)}
     )
@@ -151,7 +154,6 @@ async def login_form(
         data={"sub": str(user.id)}
     )
     
-
     refresh_token_expires = get_utc_now() + timedelta(
         days=settings.REFRESH_TOKEN_EXPIRE_DAYS
     )
@@ -173,12 +175,14 @@ async def login_form(
     }
 
 
+# ========================================
+# REFRESH TOKEN
+# ========================================
 @router.post("/refresh", response_model=Token)
 async def refresh_access_token(
     refresh_token: str,
     db: AsyncSession = Depends(get_db)
 ):
-  
     try:
         payload = decode_token(refresh_token)
         user_id = payload.get("sub")
@@ -193,15 +197,14 @@ async def refresh_access_token(
             detail="Invalid refresh token"
         )
     
-  
-    current_utc = get_utc_now() 
+    current_utc = get_utc_now()
     
     result = await db.execute(
         select(RefreshToken).where(
             RefreshToken.token == refresh_token,
             RefreshToken.user_id == int(user_id),
             RefreshToken.is_valid == True,
-            RefreshToken.expires_at > current_utc  
+            RefreshToken.expires_at > current_utc
         )
     )
     stored_token = result.scalar_one_or_none()
@@ -211,7 +214,6 @@ async def refresh_access_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token"
         )
-    
     
     result = await db.execute(
         select(User).where(User.id == int(user_id))
@@ -224,7 +226,6 @@ async def refresh_access_token(
             detail="User not found"
         )
     
-
     new_access_token = create_access_token(
         data={"sub": str(user.id)}
     )
@@ -232,10 +233,8 @@ async def refresh_access_token(
         data={"sub": str(user.id)}
     )
     
-  
     stored_token.is_valid = False
     await db.commit()
-    
     
     refresh_token_expires = get_utc_now() + timedelta(
         days=settings.REFRESH_TOKEN_EXPIRE_DAYS
@@ -258,13 +257,15 @@ async def refresh_access_token(
     }
 
 
+# ========================================
+# LOGOUT
+# ========================================
 @router.post("/logout")
 async def logout(
     current_user: User = Depends(get_current_user),
     refresh_token: str = None,
     db: AsyncSession = Depends(get_db)
 ):
-
     if refresh_token:
         result = await db.execute(
             select(RefreshToken).where(
@@ -281,49 +282,9 @@ async def logout(
     return {"message": "Successfully logged out"}
 
 
-
-@router.post("/login-form", response_model=Token)
-async def login_form(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
-):
-    """Login για Swagger UI (δέχεται form data)"""
-    result = await db.execute(
-        select(User).where(User.email == form_data.username.lower())
-    )
-    user = result.scalar_one_or_none()
-    
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
-        )
-    
-    access_token = create_access_token(data={"sub": str(user.id)})
-    refresh_token = create_refresh_token(data={"sub": str(user.id)})
-    
-    refresh_token_expires = get_utc_now() + timedelta(
-        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
-    )
-    
-    new_refresh_token = RefreshToken(
-        user_id=user.id,
-        token=refresh_token,
-        expires_at=refresh_token_expires,
-        created_at=get_utc_now()
-    )
-    
-    db.add(new_refresh_token)
-    await db.commit()
-    
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
-
-
-
+# ========================================
+# GET CURRENT USER
+# ========================================
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
     current_user: User = Depends(get_current_user),
