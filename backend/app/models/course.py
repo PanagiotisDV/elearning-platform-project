@@ -18,6 +18,7 @@ class Course(Base):
     instructor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     instructor = relationship("User", back_populates="courses")
     lessons = relationship("Lesson", back_populates="course", cascade="all, delete-orphan")
+    enrollments = relationship("Enrollment", back_populates="course") 
     is_published = Column(Boolean, default=False)
     level = Column(String(50), default="beginner")
     #     beginner, intermediate, advanced

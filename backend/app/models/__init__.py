@@ -19,5 +19,5 @@ __all__ = [
     "Quiz",
     "Question",
     "QuizAttempt",
-    "RefreshToken",
+    "RefreshToken"
 ] 
