@@ -1,8 +1,5 @@
-"""
-  API - ΕΞΑΓΩΓΗ ΟΛΩΝ ΤΩΝ ΣΥΝΑΡΤΗΣΕΩΝ
-"""
+// API - ΕΞΑΓΩΓΗ ΟΛΩΝ ΤΩΝ ΣΥΝΑΡΤΗΣΕΩΝ
 
-export { default as apiClient } from '.client/client'
+export { default as apiClient } from './client'
 export * from './auth'
 
-    

@@ -1,8 +1,6 @@
 
-"""
- * AUTHENTICATION API  
- * Όλες οι συναρτήσεις για authentication
- """
+// AUTHENTICATION API
+// Όλες οι συναρτήσεις για authentication
 
 import apiClient from './client'
 

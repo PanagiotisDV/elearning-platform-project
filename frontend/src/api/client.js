@@ -1,8 +1,6 @@
 
-"""
-  API CLIENT
- Διαχειρίζεται όλες τις HTTP requests προς το backend
-"""
+// API CLIENT
+// Διαχειρίζεται όλες τις HTTP requests προς το backend
 
 import axios from 'axios'
 
