@@ -1,7 +1,6 @@
-
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import { Toaster } from 'react-hot-toast' 
-import { Login, Register, Home } from './pages'  
+import { Toaster } from 'react-hot-toast'
+import { Login, Register } from './pages'
 
 function App() {
   return (
@@ -18,14 +17,12 @@ function App() {
   )
 }
 
-export default App
 // ========================================
 // HOME PAGE
 // ========================================
 function Home() {
   return (
     <div className="min-h-screen">
-      {/* Navbar */}
       <nav className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -44,7 +41,6 @@ function Home() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
@@ -64,7 +60,6 @@ function Home() {
             </Link>
           </div>
 
-          {/* Features */}
           <div className="grid md:grid-cols-3 gap-8 mt-20">
             <div className="card">
               <div className="text-4xl mb-4">📚</div>
@@ -88,117 +83,4 @@ function Home() {
   )
 }
 
-// ========================================
-// LOGIN PAGE
-// ========================================
-function Login() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="card max-w-md w-full">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="text-gray-600 mt-2">Sign in to continue learning</p>
-        </div>
-        <form>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              className="input-field"
-              placeholder="Enter your email"
-            />
-          </div>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              className="input-field"
-              placeholder="Enter your password"
-            />
-          </div>
-          <button type="submit" className="btn-primary w-full py-2.5">
-            Sign In
-          </button>
-        </form>
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-primary-600 hover:underline">
-            Sign up
-          </Link>
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// ========================================
-// REGISTER PAGE
-// ========================================
-function Register() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="card max-w-md w-full">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
-          <p className="text-gray-600 mt-2">Start your learning journey today</p>
-        </div>
-        <form>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Enter your full name"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              className="input-field"
-              placeholder="Enter your email"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              className="input-field"
-              placeholder="Create a password"
-            />
-          </div>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Role
-            </label>
-            <select className="input-field">
-              <option value="student">Student</option>
-              <option value="instructor">Instructor</option>
-            </select>
-          </div>
-          <button type="submit" className="btn-primary w-full py-2.5">
-            Create Account
-          </button>
-        </form>
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Already have an account?{' '}
-          <Link to="/login" className="text-primary-600 hover:underline">
-            Sign in
-          </Link>
-        </p>
-      </div>
-    </div>
-  )
-}
-
-export default App
+export default App  
