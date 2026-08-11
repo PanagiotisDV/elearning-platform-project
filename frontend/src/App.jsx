@@ -1,9 +1,12 @@
 
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast' 
+import { Login, Register, Home } from './pages'  
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" />
       <div className="min-h-screen bg-gray-50">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -15,6 +18,7 @@ function App() {
   )
 }
 
+export default App
 // ========================================
 // HOME PAGE
 // ========================================
