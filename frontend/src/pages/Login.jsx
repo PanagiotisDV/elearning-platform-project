@@ -9,22 +9,18 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
-
 const Login = () => {
-   const { login } = useAuth()
-    
+  const { login } = useAuth()
   const navigate = useNavigate()
   
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   })
- 
-  
   const [isLoading, setIsLoading] = useState(false)
- 
+  const [showPassword, setShowPassword] = useState(false)  // ← ΠΡΟΣΘΗΚΗ
+
   const handleChange = (e) => {
-    
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
@@ -32,26 +28,26 @@ const Login = () => {
     }))
   }
 
-  
   const handleSubmit = async (e) => {
-    e.preventDefault() 
+    e.preventDefault()
+    
     if (!formData.email || !formData.password) {
       toast.error('Please fill in all fields')
       return
     }
+    
     setIsLoading(true)
     
     try {
       await login(formData.email, formData.password)
       toast.success('Welcome back! 🎉')
       navigate('/dashboard')
-      
     } catch (error) {
+      console.error('Login error:', error)
       const message = error.response?.data?.detail || 'Login failed. Please try again.'
       toast.error(message)
-      
     } finally {
-     setIsLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -59,7 +55,6 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         
-        {/* Header */}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">
             Welcome Back! 👋
@@ -69,10 +64,8 @@ const Login = () => {
           </p>
         </div>
 
-        {/* Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           
-          {/* Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email Address
@@ -91,26 +84,45 @@ const Login = () => {
             />
           </div>
 
-          {/* Password */}
+          {/* Password with Show/Hide Button */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              className="input-field mt-1"
-              placeholder="Enter your password"
-              disabled={isLoading}
-            />
+            <div className="relative mt-1">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}  
+                autoComplete="current-password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="input-field pr-12"  
+                placeholder="Enter your password"
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                {showPassword ? (
+                  // Eye icon (open)
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                ) : (
+                  // Eye icon (closed)
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
@@ -129,7 +141,6 @@ const Login = () => {
             )}
           </button>
 
-          {/* Register Link */}
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
