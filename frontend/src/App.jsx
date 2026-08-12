@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { Home, Login, Register, Dashboard } from './pages'
+import { Home, Login, Register, Dashboard, Courses } from './pages'
 import { ProtectedRoute } from './components'  
 import './App.css'
 
@@ -13,6 +13,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/courses" element={<Courses />} />
           
           <Route 
             path="/dashboard" 
