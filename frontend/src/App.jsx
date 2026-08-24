@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { Home, Login, Register, Dashboard, Courses, CourseDetails  } from './pages'
+import { Home, Login, Register, Dashboard, Courses, CourseDetails, Quiz  } from './pages'
 import { ProtectedRoute } from './components'  
 import './App.css'
 import { CoursePlayer } from './pages'
@@ -25,7 +25,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          
+
           <Route path="/courses/:id/player" element={<CoursePlayer />} /><Route
             path="/courses/:id/learn"
             element={
@@ -35,6 +35,12 @@ function App() {
             }
           />
 
+          <Route  path="/quiz/:id"   element={
+            <ProtectedRoute>
+            <Quiz />
+           </ProtectedRoute>
+          }
+          />
 
         </Routes>
       </div>
