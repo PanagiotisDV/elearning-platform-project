@@ -1,13 +1,13 @@
 /**
  * COURSE PLAYER
- * Σελίδα παρακολούθησης μαθήματος
+ * Σελίδα παρακολούθησης μαθήματος με πρόοδο
  */
 
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getCourse, getLessonsByCourse, updateProgress } from '../api'
-import { Navbar } from '../components'
+import { getCourse, getLessonsByCourse, updateLessonProgress, getCourseProgress } from '../api'
+import { Navbar, ProgressBar } from '../components'
 import { 
   FaArrowLeft, FaPlay, FaCheck, FaCheckCircle, 
   FaBook, FaVideo, FaFileAlt, FaClock 
@@ -15,46 +15,58 @@ import {
 import toast from 'react-hot-toast'
 
 const CoursePlayer = () => {
-  const { id } = useParams()  
+  const { id } = useParams()  // courseId
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [selectedLessonId, setSelectedLessonId] = useState(null)
-  const [progress, setProgress] = useState({})
 
-  // 1. Φόρτωση μαθήματος
+  // ===== 1. ΦΟΡΤΩΣΗ ΜΑΘΗΜΑΤΟΣ =====
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ['course', id],
     queryFn: () => getCourse(id),
     staleTime: 5 * 60 * 1000,
   })
 
-  // 2. Φόρτωση ενοτήτων
+  // ===== 2. ΦΟΡΤΩΣΗ ΕΝΟΤΗΤΩΝ =====
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons', id],
     queryFn: () => getLessonsByCourse(id),
     staleTime: 5 * 60 * 1000,
   })
 
-  // 3. Επιλέγουμε την πρώτη ενότητα αυτόματα
+  // ===== 3. ΦΟΡΤΩΣΗ ΠΡΟΟΔΟΥ ΜΑΘΗΜΑΤΟΣ =====
+  const { data: courseProgress } = useQuery({
+    queryKey: ['courseProgress', id],
+    queryFn: () => getCourseProgress(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // ===== 4. ΕΠΙΛΟΓΗ ΠΡΩΤΗΣ ΕΝΟΤΗΤΑΣ =====
   useEffect(() => {
     if (lessons.length > 0 && !selectedLessonId) {
       setSelectedLessonId(lessons[0].id)
     }
   }, [lessons, selectedLessonId])
 
-  // 4. Βρίσκουμε την τρέχουσα ενότητα
+  // ===== 5. ΤΡΕΧΟΥΣΑ ΕΝΟΤΗΤΑ =====
   const currentLesson = lessons.find(l => l.id === selectedLessonId)
 
-  // 5. Mutation για ενημέρωση προόδου
+  // ===== 6. MUTATION ΓΙΑ ΠΡΟΟΔΟ =====
   const progressMutation = useMutation({
-    mutationFn: ({ lessonId, data }) => updateProgress(lessonId, data),
+    mutationFn: ({ lessonId, data }) => updateLessonProgress(lessonId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lessons', id] })
+      queryClient.invalidateQueries({ queryKey: ['courseProgress', id] })
       toast.success('Progress updated! 🎉')
+    },
+    onError: (error) => {
+      const message = error.response?.data?.detail || 'Failed to update progress'
+      toast.error(message)
     },
   })
 
-  // 6. Handle mark as complete
+  // ===== 7. MARK AS COMPLETE =====
   const handleMarkComplete = () => {
     if (!currentLesson) return
     progressMutation.mutate({
@@ -63,7 +75,7 @@ const CoursePlayer = () => {
     })
   }
 
-  // 7. Loading
+  // ===== 8. LOADING STATE =====
   if (courseLoading || lessonsLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -78,7 +90,7 @@ const CoursePlayer = () => {
     )
   }
 
-  // 8. Error
+  // ===== 9. ERROR STATE =====
   if (!course) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -94,7 +106,7 @@ const CoursePlayer = () => {
     )
   }
 
-  // 9. Render
+  // ===== 10. RENDER =====
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -114,8 +126,20 @@ const CoursePlayer = () => {
           </div>
         </div>
 
+        {/* ===== PROGRESS BAR ===== */}
+        {courseProgress && (
+          <div className="mb-6 bg-white rounded-lg shadow-md p-4">
+            <ProgressBar
+              percentage={courseProgress.progress_percentage || 0}
+              label="Course Progress"
+              completed={courseProgress.completed_lessons || 0}
+              total={courseProgress.total_lessons || 0}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
+          {/* ===== MAIN CONTENT ===== */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md p-6">
               {currentLesson ? (
@@ -154,12 +178,24 @@ const CoursePlayer = () => {
                   <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-100">
                     <div className="flex gap-3">
                       {currentLesson.id > lessons[0]?.id && (
-                        <button className="btn-secondary text-sm">
+                        <button 
+                          onClick={() => {
+                            const index = lessons.findIndex(l => l.id === currentLesson.id)
+                            if (index > 0) setSelectedLessonId(lessons[index - 1].id)
+                          }}
+                          className="btn-secondary text-sm"
+                        >
                           Previous
                         </button>
                       )}
                       {currentLesson.id < lessons[lessons.length - 1]?.id && (
-                        <button className="btn-secondary text-sm">
+                        <button 
+                          onClick={() => {
+                            const index = lessons.findIndex(l => l.id === currentLesson.id)
+                            if (index < lessons.length - 1) setSelectedLessonId(lessons[index + 1].id)
+                          }}
+                          className="btn-secondary text-sm"
+                        >
                           Next
                         </button>
                       )}
@@ -181,7 +217,7 @@ const CoursePlayer = () => {
             </div>
           </div>
 
-          {/* Sidebar - Lessons List */}
+          {/* ===== SIDEBAR - LESSONS LIST ===== */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-4">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -206,11 +242,16 @@ const CoursePlayer = () => {
                     }`}>
                       {lesson.title}
                     </span>
-                    {lesson.content_type === 'video' ? (
-                      <FaVideo className="text-gray-400 text-xs" />
-                    ) : (
-                      <FaFileAlt className="text-gray-400 text-xs" />
-                    )}
+                    <div className="flex items-center gap-1">
+                      {lesson.is_completed && (
+                        <FaCheckCircle className="text-green-500 text-xs" />
+                      )}
+                      {lesson.content_type === 'video' ? (
+                        <FaVideo className="text-gray-400 text-xs" />
+                      ) : (
+                        <FaFileAlt className="text-gray-400 text-xs" />
+                      )}
+                    </div>
                   </button>
                 ))}
               </div>
