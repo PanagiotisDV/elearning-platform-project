@@ -2,3 +2,6 @@
 export { default as Register } from './Register'
 export { default as Home } from './Home'
 export { default as Dashboard } from './Dashboard' 
+export { default as Courses } from './Courses'
+export { default as CourseDetails } from './CourseDetails'
+export { default as CoursePlayer } from './CoursePlayer'

@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'
 import { Home, Login, Register, Dashboard, Courses, CourseDetails  } from './pages'
 import { ProtectedRoute } from './components'  
 import './App.css'
+import { CoursePlayer } from './pages'
 
 function App() {
   return (
@@ -24,6 +25,17 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          
+          <Route path="/courses/:id/player" element={<CoursePlayer />} /><Route
+            path="/courses/:id/learn"
+            element={
+              <ProtectedRoute>
+              <CoursePlayer />
+              </ProtectedRoute>
+            }
+          />
+
+
         </Routes>
       </div>
     </Router>
