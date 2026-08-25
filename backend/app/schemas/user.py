@@ -28,9 +28,11 @@ class UserCreate(BaseModel):
         min_length=8,
         description="κωδικός (τουλάχιστον 8 χαρακτήρες)"
     )
-    full_name: str = Field(
-        ...,
-        description="πλήρες όνομα"
+    first_name: str = Field(
+        ..., description="Το όνομα"
+    )
+    last_name: str = Field(
+        ..., description="Το επώνυμο"
     )
     
     role: UserRole = Field(
@@ -45,19 +47,37 @@ class UserCreate(BaseModel):
        
         if not re.search(r'[A-Z]', v):
             
-            raise ValueError(' κωδικός εμπεριέχει έχει ένα κεφαλαίο γράμμα')
+            raise ValueError(' κωδικός πρέπει να περιέχει έχει ένα κεφαλαίο γράμμα')
             
         if not re.search(r'[a-z]', v):
-            raise ValueError(' κωδικός εμπεριέχει ένα μικρό γράμμα')
+            raise ValueError(' κωδικός πρέπει να περιέχει ένα μικρό γράμμα')
         
         if not re.search(r'\d', v):
-            raise ValueError('κωδικός εμπεριέχει έναν αριθμό')
+            raise ValueError('κωδικός πρέπει να περιέχει έναν αριθμό')
         
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
-            raise ValueError('κωδικός εμπεριέχει έναν ειδικό χαρακτήρα')
+            raise ValueError('κωδικός πρέπει να περιέχει έναν ειδικό χαρακτήρα')
         
         return v
-        
+
+
+    @field_validator('first_name')
+    @classmethod
+    def validate_first_name(cls, v: str) -> str:
+        if len(v) < 2:
+            raise ValueError('Το όνομα πρέπει να έχει τουλάχιστον 2 χαρακτήρες')
+        if not re.match(r'^[a-zA-Z\s.-]+$', v):
+            raise ValueError('Το όνομα επιτρέπει μόνο γράμματα, κενά, παύλες και τελείες')
+        return v.strip()
+    
+    @field_validator('last_name')
+    @classmethod
+    def validate_last_name(cls, v: str) -> str:
+        if len(v) < 2:
+            raise ValueError('Το επώνυμο πρέπει να έχει τουλάχιστον 2 χαρακτήρες')
+        if not re.match(r'^[a-zA-Z\s.-]+$', v):
+            raise ValueError('Το επώνυμο επιτρέπει μόνο γράμματα, κενά, παύλες και τελείες')
+        return v.strip()    
 
 
 class UserLogin(BaseModel):
@@ -68,7 +88,8 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: int
     email: str
-    full_name: str
+    first_name: str  
+    last_name: str
     role: UserRole
     is_active: bool
     is_verified: bool

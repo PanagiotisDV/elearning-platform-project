@@ -15,7 +15,8 @@ const Register = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    full_name: '',
+    first_name: '',   
+    last_name: '',    
     role: 'student',
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -31,7 +32,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.email || !formData.password || !formData.full_name) {
+    if (!formData.email || !formData.password || !formData.first_name || !formData.last_name) {
       toast.error('Please fill in all fields')
       return
     }
@@ -72,23 +73,42 @@ const Register = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           
           {/* Full Name */}
-          <div>
-            <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">
-              Full Name
-            </label>
-            <input
-              id="full_name"
-              name="full_name"
-              type="text"
-              autoComplete="name"
-              required
-              value={formData.full_name}
-              onChange={handleChange}
-              className="input-field mt-1"
-              placeholder="Enter your full name"
-              disabled={isLoading}
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+    <div>
+        <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+            First Name
+        </label>
+        <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            autoComplete="given-name"
+            required
+            value={formData.first_name}
+            onChange={handleChange}
+            className="input-field mt-1"
+            placeholder="Enter your first name"
+            disabled={isLoading}
+        />
+    </div>
+    <div>
+        <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+            Last Name
+        </label>
+        <input
+            id="last_name"
+            name="last_name"
+            type="text"
+            autoComplete="family-name"
+            required
+            value={formData.last_name}
+            onChange={handleChange}
+            className="input-field mt-1"
+            placeholder="Enter your last name"
+            disabled={isLoading}
+        />
+    </div>
+</div>
 
           {/* Email */}
           <div>
@@ -146,7 +166,11 @@ const Register = () => {
                 )}
               </button>
             </div>
-            <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
+            <p className="mt-1 text-xs text-gray-500"> - Ο κωδικός πρέπει να αποτελείται τουλάχιστον από 8 χαρακτήρες </p>
+            <p className="mt-1 text-xs text-gray-500"> - Ο κωδικός πρέπει να περιέχει τουλάχιστον ένα κεφαλαίο γράμμα</p>
+            <p className="mt-1 text-xs text-gray-500">- Ο κωδικός πρέπει να περιέχει τουλάχιστον ένα μικρό γράμμα</p>
+            <p className="mt-1 text-xs text-gray-500">- Ο κωδικός πρέπει να περιέχει τουλάχιστον έναν αριθμό</p>
+            <p className="mt-1 text-xs text-gray-500">{`- Ο κωδικός πρέπει να περιέχει τουλάχιστον έναν ειδικό χαρακτήρα !@#$%^&*(),.?":{}|<> `}</p>
           </div>
 
           {/* Role */}

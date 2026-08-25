@@ -62,7 +62,8 @@ async def register(
     new_user = User(
         email=user_data.email.lower(),
         hashed_password=hashed_password,
-        full_name=user_data.full_name,
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
         role=model_role
     )
     
