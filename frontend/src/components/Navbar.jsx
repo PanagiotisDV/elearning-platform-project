@@ -3,6 +3,11 @@ import { useAuth } from '../context/AuthContext'
 
 const Navbar = () => {
   const { isAuthenticated, logout } = useAuth()
+  const navigate = useNavigate() 
+
+  const handleLogout = () => {
+    logout()           
+    navigate('/')      
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -23,7 +28,7 @@ const Navbar = () => {
             {isAuthenticated ? (
               <button
                 type="button"
-                onClick={logout}
+                onClick={handleLogout}
                 className="text-sm text-red-600 hover:text-red-800"
               >
                 Logout
@@ -44,5 +49,5 @@ const Navbar = () => {
     </nav>
   )
 }
-
+}
 export default Navbar
