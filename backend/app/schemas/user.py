@@ -66,7 +66,7 @@ class UserCreate(BaseModel):
     def validate_first_name(cls, v: str) -> str:
         if len(v) < 2:
             raise ValueError('Το όνομα πρέπει να έχει τουλάχιστον 2 χαρακτήρες')
-        if not re.match(r'^[a-zA-Z\s.-]+$', v):
+        if not re.match(r'^[a-zA-Z\s.\u0380-\u03FF-]+$', v):
             raise ValueError('Το όνομα επιτρέπει μόνο γράμματα, κενά, παύλες και τελείες')
         return v.strip()
     
@@ -75,7 +75,7 @@ class UserCreate(BaseModel):
     def validate_last_name(cls, v: str) -> str:
         if len(v) < 2:
             raise ValueError('Το επώνυμο πρέπει να έχει τουλάχιστον 2 χαρακτήρες')
-        if not re.match(r'^[a-zA-Z\s.-]+$', v):
+        if not re.match(r'^[a-zA-Z\s.\u0380-\u03FF-]+$', v):
             raise ValueError('Το επώνυμο επιτρέπει μόνο γράμματα, κενά, παύλες και τελείες')
         return v.strip()    
 
