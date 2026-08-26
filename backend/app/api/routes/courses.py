@@ -13,7 +13,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.models.course import Course
 from app.schemas.course import CourseCreate, CourseUpdate, CourseResponse, CourseListResponse
-from app.api.deps import get_current_active_user 
+from app.api.deps import get_current_active_user, require_role  # ← ΠΡΟΣΘΗΚΗ
 
 
 router = APIRouter()
@@ -23,14 +23,8 @@ router = APIRouter()
 async def create_course(
     course_data: CourseCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_role("instructor")),  
 ):
-    if current_user.role.value not in ["instructor", "admin"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not authorized to create courses"
-        )
-
     """
     ΔΗΜΙΟΥΡΓΙΑ ΝΕΟΥ ΜΑΘΗΜΑΤΟΣ
     Μόνο instructors και admins
@@ -49,24 +43,20 @@ async def create_course(
     await db.refresh(new_course)
       
     response = CourseResponse.model_validate(new_course)
-    response.instructor_name = current_user.full_name
+    response.instructor_name = f"{current_user.first_name} {current_user.last_name}"
     return response
 
 
 @router.get("/", response_model=List[CourseListResponse])
 async def get_courses(
     skip: int = Query(0, ge=0, description="Πόσα να παραλείψει"),
- 
-    
     limit: int = Query(100, ge=1, le=100, description="Πόσα να πάρει"),
     level: Optional[str] = Query(None, description="Φίλτρο επιπέδου"),
     category: Optional[str] = Query(None, description="Φίλτρο κατηγορίας"),
     search: Optional[str] = Query(None, description="Αναζήτηση στον τίτλο"),
     only_published: bool = Query(True, description="Μόνο δημοσιευμένα"),
-        
     db: AsyncSession = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_active_user)
-  
 ):
     """
     ΛΗΨΗ ΛΙΣΤΑΣ ΜΑΘΗΜΑΤΩΝ
@@ -107,7 +97,7 @@ async def get_courses(
         instructor = result.scalar_one_or_none()
         
         course_response = CourseListResponse.model_validate(course)
-        course_response.instructor_name = instructor.full_name if instructor else "Unknown"
+        course_response.instructor_name = f"{instructor.first_name} {instructor.last_name}" if instructor else "Unknown"
         response_list.append(course_response)
     
     return response_list
@@ -143,25 +133,18 @@ async def get_course(
     instructor = result.scalar_one_or_none()
     
     response = CourseResponse.model_validate(course)
-    response.instructor_name = instructor.full_name if instructor else "Unknown"
+    response.instructor_name = f"{instructor.first_name} {instructor.last_name}" if instructor else "Unknown"
     
     return response
 
 
 @router.put("/{course_id}", response_model=CourseResponse)
-
 async def update_course(
     course_id: int,
     course_data: CourseUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_role("instructor")),  
 ):
-    if current_user.role.value not in ["instructor", "admin"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only instructors or admins can update courses"
-        )
-
     """
     ΕΝΗΜΕΡΩΣΗ ΜΑΘΗΜΑΤΟΣ
     Μόνο ο instructor που το δημιούργησε ή admin
@@ -190,7 +173,7 @@ async def update_course(
     await db.refresh(course)
     
     response = CourseResponse.model_validate(course)
-    response.instructor_name = current_user.full_name
+    response.instructor_name = f"{current_user.first_name} {current_user.last_name}"
     
     return response
 
@@ -199,14 +182,8 @@ async def update_course(
 async def delete_course(
     course_id: int,
     db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_role("instructor")),  
 ):
-    if current_user.role.value not in ["instructor", "admin"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only instructors or admins can delete courses"
-        )
-
     """
     ΔΙΑΓΡΑΦΗ ΜΑΘΗΜΑΤΟΣ
     Μόνο ο instructor που το δημιούργησε ή admin
@@ -230,4 +207,4 @@ async def delete_course(
     await db.delete(course)
     await db.commit()
     
-    return None  
+    return None
