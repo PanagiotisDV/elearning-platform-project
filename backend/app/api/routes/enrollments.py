@@ -16,6 +16,9 @@ from app.api.deps import get_current_active_user, require_role
 
 router = APIRouter()
 
+# ========================================
+# STUDENT: ΕΓΓΡΑΦΗ ΣΕ ΜΑΘΗΜΑ (PENDING)
+# ========================================
 @router.post("/enroll", response_model=EnrollmentResponse, status_code=status.HTTP_201_CREATED)
 async def enroll_in_course(
     enrollment_data: EnrollmentCreate,
@@ -23,17 +26,16 @@ async def enroll_in_course(
     current_user: User = Depends(get_current_active_user)
 ):
     """
-    ΕΓΓΡΑΦΗ ΣΕ ΜΑΘΗΜΑ
-    Μόνο students
+    Ο STUDENT ΣΤΕΛΝΕΙ ΑΙΤΗΜΑ ΕΓΓΡΑΦΗΣ (PENDING)
     """
-   
+    # 1. Έλεγχος ότι ο χρήστης είναι student
     if current_user.role.value not in ["student", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only students can enroll in courses"
         )
     
-   
+    # 2. Έλεγχος ότι το μάθημα υπάρχει
     result = await db.execute(select(Course).where(Course.id == enrollment_data.course_id))
     course = result.scalar_one_or_none()
     
@@ -43,34 +45,44 @@ async def enroll_in_course(
             detail="Course not found"
         )
     
-    
+    # 3. Έλεγχος ότι το μάθημα είναι δημοσιευμένο
     if not course.is_published and current_user.role.value != "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Course is not published yet"
         )
     
-    
+    # 4. Έλεγχος ότι δεν υπάρχει ήδη εγγραφή (σε οποιαδήποτε κατάσταση)
     result = await db.execute(
         select(Enrollment).where(
             Enrollment.user_id == current_user.id,
-            Enrollment.course_id == enrollment_data.course_id,
-            Enrollment.status != EnrollmentStatus.DROPPED
+            Enrollment.course_id == enrollment_data.course_id
         )
     )
     existing = result.scalar_one_or_none()
     
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Already enrolled in this course"
-        )
+        if existing.status == EnrollmentStatus.PENDING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You have already sent an enrollment request"
+            )
+        elif existing.status == EnrollmentStatus.ACTIVE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You are already enrolled in this course"
+            )
+        elif existing.status == EnrollmentStatus.DROPPED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Your enrollment was rejected or dropped"
+            )
     
-    
+    # 5. Δημιουργία εγγραφής (PENDING)
     new_enrollment = Enrollment(
         user_id=current_user.id,
         course_id=enrollment_data.course_id,
-        status=EnrollmentStatus.ACTIVE
+        status=EnrollmentStatus.PENDING
     )
     
     db.add(new_enrollment)
@@ -79,7 +91,9 @@ async def enroll_in_course(
     
     return new_enrollment
 
-
+# ========================================
+# STUDENT: ΛΗΨΗ ΕΓΓΡΑΦΩΝ ΜΟΥ
+# ========================================
 @router.get("/enrollments/me", response_model=List[EnrollmentResponse])
 async def get_my_enrollments(
     db: AsyncSession = Depends(get_db),
@@ -95,7 +109,6 @@ async def get_my_enrollments(
     )
     enrollments = result.scalars().all()
     
-    
     response_list = []
     for enrollment in enrollments:
         result = await db.execute(select(Course).where(Course.id == enrollment.course_id))
@@ -103,50 +116,138 @@ async def get_my_enrollments(
         
         response = EnrollmentResponse.model_validate(enrollment)
         response.course_title = course.title if course else "Unknown"
-        response.course_instructor = "Unknown"  # Θα το προσθέσουμε αργότερα
         response_list.append(response)
     
     return response_list
 
-
-@router.get("/courses/{course_id}/enrollments", response_model=List[EnrollmentResponse])
-async def get_course_enrollments(
+# ========================================
+# INSTRUCTOR: ΛΗΨΗ PENDING ΑΙΤΗΜΑΤΩΝ
+# ========================================
+@router.get("/courses/{course_id}/enrollments/pending")
+async def get_pending_enrollments(
     course_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role("instructor"))
 ):
     """
-    ΛΗΨΗ ΟΛΩΝ ΤΩΝ ΕΓΓΡΑΦΩΝ ΕΝΟΣ ΜΑΘΗΜΑΤΟΣ
-    Μόνο ο instructor του μαθήματος ή admin
+    Ο INSTRUCTOR ΒΛΕΠΕΙ ΟΛΑ ΤΑ PENDING ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ
     """
-    
+    # 1. Βρίσκουμε το μάθημα
     result = await db.execute(select(Course).where(Course.id == course_id))
     course = result.scalar_one_or_none()
     
     if not course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Course not found"
-        )
+        raise HTTPException(status_code=404, detail="Course not found")
     
-    
+    # 2. Έλεγχος δικαιωμάτων
     if course.instructor_id != current_user.id and current_user.role.value != "admin":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only view enrollments for your own courses"
+            status_code=403,
+            detail="You can only view pending enrollments for your own courses"
         )
     
-    
+    # 3. Λήψη pending εγγραφών
     result = await db.execute(
         select(Enrollment)
         .where(Enrollment.course_id == course_id)
+        .where(Enrollment.status == EnrollmentStatus.PENDING)
         .order_by(Enrollment.enrolled_at.desc())
     )
     enrollments = result.scalars().all()
     
     return enrollments
 
+# ========================================
+# INSTRUCTOR: ΕΓΚΡΙΣΗ ΕΓΓΡΑΦΗΣ
+# ========================================
+@router.put("/enrollments/{enrollment_id}/approve")
+async def approve_enrollment(
+    enrollment_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("instructor"))
+):
+    """
+    Ο INSTRUCTOR ΕΓΚΡΙΝΕΙ ΤΗΝ ΕΓΓΡΑΦΗ
+    """
+    # 1. Βρίσκουμε την εγγραφή
+    result = await db.execute(select(Enrollment).where(Enrollment.id == enrollment_id))
+    enrollment = result.scalar_one_or_none()
+    
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+    
+    # 2. Βρίσκουμε το μάθημα
+    result = await db.execute(select(Course).where(Course.id == enrollment.course_id))
+    course = result.scalar_one_or_none()
+    
+    # 3. Έλεγχος ότι ο instructor έχει το μάθημα
+    if course.instructor_id != current_user.id and current_user.role.value != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="You can only approve enrollments for your own courses"
+        )
+    
+    # 4. Έλεγχος ότι είναι σε κατάσταση PENDING
+    if enrollment.status != EnrollmentStatus.PENDING:
+        raise HTTPException(
+            status_code=400,
+            detail="Enrollment is not in pending status"
+        )
+    
+    # 5. Έγκριση
+    enrollment.status = EnrollmentStatus.ACTIVE
+    await db.commit()
+    await db.refresh(enrollment)
+    
+    return {"message": "Enrollment approved successfully"}
 
+# ========================================
+# INSTRUCTOR: ΑΠΟΡΡΙΨΗ ΕΓΓΡΑΦΗΣ
+# ========================================
+@router.put("/enrollments/{enrollment_id}/reject")
+async def reject_enrollment(
+    enrollment_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("instructor"))
+):
+    """
+    Ο INSTRUCTOR ΑΠΟΡΡΙΠΤΕΙ ΤΗΝ ΕΓΓΡΑΦΗ
+    """
+    # 1. Βρίσκουμε την εγγραφή
+    result = await db.execute(select(Enrollment).where(Enrollment.id == enrollment_id))
+    enrollment = result.scalar_one_or_none()
+    
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+    
+    # 2. Βρίσκουμε το μάθημα
+    result = await db.execute(select(Course).where(Course.id == enrollment.course_id))
+    course = result.scalar_one_or_none()
+    
+    # 3. Έλεγχος ότι ο instructor έχει το μάθημα
+    if course.instructor_id != current_user.id and current_user.role.value != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="You can only reject enrollments for your own courses"
+        )
+    
+    # 4. Έλεγχος ότι είναι σε κατάσταση PENDING
+    if enrollment.status != EnrollmentStatus.PENDING:
+        raise HTTPException(
+            status_code=400,
+            detail="Enrollment is not in pending status"
+        )
+    
+    # 5. Απόρριψη
+    enrollment.status = EnrollmentStatus.DROPPED
+    await db.commit()
+    await db.refresh(enrollment)
+    
+    return {"message": "Enrollment rejected successfully"}
+
+# ========================================
+# STUDENT: ΠΑΡΑΙΤΗΣΗ ΑΠΟ ΜΑΘΗΜΑ (μόνο για ACTIVE)
+# ========================================
 @router.delete("/enrollments/{enrollment_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def drop_course(
     enrollment_id: int,
@@ -154,9 +255,8 @@ async def drop_course(
     current_user: User = Depends(get_current_active_user)
 ):
     """
-    ΠΑΡΑΙΤΗΣΗ ΑΠΟ ΜΑΘΗΜΑ
+    ΠΑΡΑΙΤΗΣΗ ΑΠΟ ΜΑΘΗΜΑ (μόνο αν είναι ACTIVE)
     """
-    
     result = await db.execute(select(Enrollment).where(Enrollment.id == enrollment_id))
     enrollment = result.scalar_one_or_none()
     
@@ -166,13 +266,17 @@ async def drop_course(
             detail="Enrollment not found"
         )
     
-    
     if enrollment.user_id != current_user.id and current_user.role.value != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only drop your own enrollments"
         )
     
+    if enrollment.status != EnrollmentStatus.ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You can only drop active enrollments"
+        )
     
     enrollment.status = EnrollmentStatus.DROPPED
     await db.commit()
