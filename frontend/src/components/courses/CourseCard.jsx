@@ -1,9 +1,16 @@
 import { Link } from 'react-router-dom'
-import { FaUser, FaBook, FaPlus } from 'react-icons/fa'
+import { FaUser, FaBook } from 'react-icons/fa'
 import { useAuth } from '../../context/AuthContext'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { enrollInCourse } from '../../api'
 import toast from 'react-hot-toast'
+import {
+  EnrolledBadge,
+  PendingBadge,
+  InstructorBadge,
+  LoginRequiredBadge,
+  EnrollButton,
+} from './badges'
 
 const CourseCard = ({ course, isEnrolled = false, isPending = false }) => {
   const { isAuthenticated, user } = useAuth()
@@ -35,6 +42,25 @@ const CourseCard = ({ course, isEnrolled = false, isPending = false }) => {
       return
     }
     enrollMutation.mutate()
+  }
+
+  // ===== ΛΟΓΙΚΗ ΕΜΦΑΝΙΣΗΣ =====
+  const renderAction = () => {
+    if (!isAuthenticated) {
+      return <LoginRequiredBadge />
+    }
+
+    if (user?.role === 'instructor') {
+      return <InstructorBadge />
+    }
+
+    if (user?.role === 'student') {
+      if (isEnrolled) return <EnrolledBadge />
+      if (isPending) return <PendingBadge />
+      return <EnrollButton onClick={handleEnroll} isLoading={enrollMutation.isPending} />
+    }
+
+    return null
   }
 
   return (
@@ -75,34 +101,7 @@ const CourseCard = ({ course, isEnrolled = false, isPending = false }) => {
           Λεπτομέρειες
         </Link>
 
-        {isAuthenticated && user?.role === 'student' ? (
-          isEnrolled ? (
-            <span className="text-xs text-green-600 bg-green-50 px-3 py-1.5 rounded-lg flex items-center border border-green-200 whitespace-nowrap">
-              ✅ Εγγεγραμμένος
-            </span>
-          ) : isPending ? (
-            <span className="text-xs text-yellow-600 bg-yellow-50 px-3 py-1.5 rounded-lg flex items-center border border-yellow-200 whitespace-nowrap">
-              ⏳ Αναμονή έγκρισης
-            </span>
-          ) : (
-            <button
-              onClick={handleEnroll}
-              disabled={enrollMutation.isPending}
-              className="btn-secondary text-sm px-4 py-1.5 flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"
-            >
-              <FaPlus className="text-xs" />
-              {enrollMutation.isPending ? '...' : 'Αίτημα Εγγραφής'}
-            </button>
-          )
-        ) : isAuthenticated && user?.role === 'instructor' ? (
-          <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg flex items-center whitespace-nowrap">
-            👨‍🏫 Instructor
-          </span>
-        ) : (
-          <span className="text-xs text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg flex items-center whitespace-nowrap">
-            🔒 Σύνδεση για εγγραφή
-          </span>
-        )}
+        {renderAction()}
       </div>
     </div>
   )
