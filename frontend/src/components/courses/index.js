@@ -1,3 +1,3 @@
- export { default as ProtectedRoute } from './ProtectedRoute'
-export { default as Navbar } from './Navbar'
- export * from './courses'
+export { default as CourseCard } from './CourseCard'
+export { default as Navbar } from '../Navbar'
+export * from './courses'

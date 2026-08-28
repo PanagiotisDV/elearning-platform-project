@@ -1,14 +1,23 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { Home, Login, Register, Dashboard, Courses, CourseDetails, Quiz  } from './pages'
-import { ProtectedRoute } from './components'  
+import {
+  Home,
+  Login,
+  Register,
+  Dashboard,
+  Courses,
+  CourseDetails,
+  Quiz,
+  CoursePlayer,
+} from './pages'
+import { ProtectedRoute } from './components'
 import './App.css'
-import { CoursePlayer } from './pages'
 
 function App() {
   return (
     <Router>
       <Toaster position="top-right" />
+
       <div className="min-h-screen bg-gray-50">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -16,32 +25,44 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
-          
-          <Route 
-            path="/dashboard" 
+
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-            } 
+            }
           />
 
-          <Route path="/courses/:id/player" element={<CoursePlayer />} /><Route
-            path="/courses/:id/learn"
+          <Route
+            path="/courses/:id/player"
             element={
               <ProtectedRoute>
-              <CoursePlayer />
+                <CoursePlayer />
               </ProtectedRoute>
             }
           />
 
-          <Route  path="/quiz/:id"   element={
-            <ProtectedRoute>
-            <Quiz />
-           </ProtectedRoute>
-          }
+          <Route
+            path="/courses/:id/learn"
+            element={
+              <ProtectedRoute>
+                <CoursePlayer />
+              </ProtectedRoute>
+            }
           />
 
+          <Route
+            path="/quiz/:id"
+            element={
+              <ProtectedRoute>
+                <Quiz />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<h1>404 - Η σελίδα δεν βρέθηκε</h1>} />
         </Routes>
       </div>
     </Router>

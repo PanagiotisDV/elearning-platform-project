@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { FaBookOpen, FaGraduationCap, FaChartLine, FaCertificate } from 'react-icons/fa'
 
 const Home = () => {
   return (
@@ -8,57 +9,85 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <span className="text-2xl font-bold text-primary-600">🎓 E-Learning platform, Μια νέα εμπειρία στην εκπαίδευση  </span>
+              <span className="text-2xl font-bold text-primary-600">
+                🎓 E-Learning platform, Μια νέα εμπειρία στην εκπαίδευση
+              </span>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/login" className="btn-primary text-sm">
-                Login
+                Σύνδεση
               </Link>
               <Link to="/register" className="btn-secondary text-sm">
-                Register
+                Εγγραφή
               </Link>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Learn Anything,{' '}
-            <span className="text-primary-600">Anytime</span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Discover thousands of courses from expert instructors.
-            Start learning today and advance your career.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Link to="/register" className="btn-primary text-lg px-8 py-3">
-              Get Started Free
-            </Link>
-            <Link to="/login" className="btn-secondary text-lg px-8 py-3">
-              Sign In
-            </Link>
-          </div>
+      {/* ===== HERO SECTION ΜΕ BACKGROUND IMAGE ===== */}
+      <div 
+        className="relative py-40 px-4 sm:px-6 lg:px-8"
+        style={{
+          backgroundImage: `url('/main-bg-page.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        {/* ===== OVERLAY ΓΙΑ OPACITY ===== */}
+        <div 
+          className="absolute inset-0 bg-white"
+          style={{ opacity: 0.4 }}
+        ></div>
 
-          {/* Features */}
-          <div className="grid md:grid-cols-3 gap-8 mt-20">
-            <div className="card">
-              <div className="text-4xl mb-4">📚</div>
-              <h3 className="text-xl font-semibold mb-2">Expert Courses</h3>
-              <p className="text-gray-600">Learn from industry experts with real-world experience</p>
+        {/* ===== ΠΕΡΙΕΧΟΜΕΝΟ ===== */}
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <div className="text-center">
+            <h1 className="text-5xl font-bold text-primary-900 mb-6 flex items-center justify-center gap-3">
+              <FaBookOpen className="text-primary-300" />
+              Διψάς για μάθηση;{' '}
+              <span className="text-primary-900">Ξέρουμε τον τρόπο!!!</span>
+            </h1>
+            <p className="text-2xl text-extrabold text-primary-800 max-w-2xl mx-auto mb-8">
+              Ανακάλυψε χιλιάδες μαθήματα από έμπειρους εκπαιδευτές.
+              Ξεκίνα να μαθαίνεις σήμερα και εξέλιξε την καριέρα σου.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Link to="/register" className="btn-primary text-lg px-8 py-3">
+                Ξεκίνα Δωρεάν
+              </Link>
+              <Link to="/login" className="btn-secondary text-lg px-8 py-3">
+                Σύνδεση
+              </Link>
             </div>
-            <div className="card">
-              <div className="text-4xl mb-4">🎯</div>
-              <h3 className="text-xl font-semibold mb-2">Track Progress</h3>
-              <p className="text-gray-600">Monitor your learning journey and achievements</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== FEATURES - ΚΑΤΩ ΑΠΟ ΤΗΝ ΕΙΚΟΝΑ ===== */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="card bg-white shadow-md hover:shadow-lg transition-shadow">
+            <div className="text-4xl mb-4 flex justify-center">
+              <FaGraduationCap className="text-primary-600" />
             </div>
-            <div className="card">
-              <div className="text-4xl mb-4">🏆</div>
-              <h3 className="text-xl font-semibold mb-2">Certificates</h3>
-              <p className="text-gray-600">Earn certificates to showcase your skills</p>
+            <h3 className="text-xl font-semibold text-center mb-2">Μαθήματα από Ειδικούς</h3>
+            <p className="text-gray-600 text-center">Μάθε από επαγγελματίες του κλάδου με πραγματική εμπειρία</p>
+          </div>
+          <div className="card bg-white shadow-md hover:shadow-lg transition-shadow">
+            <div className="text-4xl mb-4 flex justify-center">
+              <FaChartLine className="text-green-600" />
             </div>
+            <h3 className="text-xl font-semibold text-center mb-2">Παρακολούθηση Προόδου</h3>
+            <p className="text-gray-600 text-center">Παρακολούθησε τη μαθησιακή σου πορεία και τα επιτεύγματά σου</p>
+          </div>
+          <div className="card bg-white shadow-md hover:shadow-lg transition-shadow">
+            <div className="text-4xl mb-4 flex justify-center">
+              <FaCertificate className="text-yellow-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-center mb-2">Πιστοποιητικά</h3>
+            <p className="text-gray-600 text-center">Απόκτησε πιστοποιητικά για να αναδείξεις τις δεξιότητές σου</p>
           </div>
         </div>
       </div>

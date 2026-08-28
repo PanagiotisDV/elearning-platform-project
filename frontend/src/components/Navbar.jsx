@@ -1,13 +1,14 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const Navbar = () => {
   const { isAuthenticated, logout } = useAuth()
-  const navigate = useNavigate() 
+  const navigate = useNavigate()
 
   const handleLogout = () => {
-    logout()           
-    navigate('/')      
+    logout()
+    navigate('/')
+  }
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -48,6 +49,6 @@ const Navbar = () => {
       </div>
     </nav>
   )
-}
-}
+}  
+
 export default Navbar

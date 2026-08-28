@@ -107,7 +107,7 @@ class CourseListResponse(BaseModel):
     id: int
     title: str
     description: Optional[str]
-    instructor_name: str
+    instructor_name: Optional[str] = None
     level: str
     category: Optional[str]
     is_published: bool
