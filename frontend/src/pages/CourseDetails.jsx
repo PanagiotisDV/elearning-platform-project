@@ -15,7 +15,7 @@ import { useAuth } from '../context/AuthContext'
 const CourseDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const queryClient = useQueryClient()
   const [isEnrolling, setIsEnrolling] = useState(false)
 
@@ -26,27 +26,30 @@ const CourseDetails = () => {
     staleTime: 5 * 60 * 1000,
   })
 
-  // 2. Φόρτωση εγγραφών (για έλεγχο αν είναι ήδη εγγεγραμμένος)
+  // 2. Φόρτωση εγγραφών
   const { data: enrollments = [] } = useQuery({
     queryKey: ['enrollments'],
     queryFn: getMyEnrollments,
     enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 
-  // 3. Έλεγχος αν είναι ήδη εγγεγραμμένος
-  const isEnrolled = enrollments.some(e => e.course_id === parseInt(id))
+  // 3. Έλεγχος κατάστασης εγγραφής
+  const enrollment = enrollments.find(e => e.course_id === parseInt(id))
+  const isEnrolled = enrollment?.status === 'active' || enrollment?.status === 'completed'
+  const isPending = enrollment?.status === 'pending'
 
   // 4. Mutation για εγγραφή
   const enrollMutation = useMutation({
     mutationFn: () => enrollInCourse(id),
     onSuccess: () => {
-      toast.success('Successfully enrolled in course! 🎉')
+      toast.success('Το αίτημα εγγραφής στάλθηκε! 📨')
       queryClient.invalidateQueries({ queryKey: ['enrollments'] })
+      queryClient.invalidateQueries({ queryKey: ['course', id] })
       setIsEnrolling(false)
     },
     onError: (error) => {
-      const message = error.response?.data?.detail || 'Failed to enroll. Please try again.'
+      const message = error.response?.data?.detail || 'Αποτυχία αιτήματος'
       toast.error(message)
       setIsEnrolling(false)
     },
@@ -55,7 +58,7 @@ const CourseDetails = () => {
   // 5. Handle enroll
   const handleEnroll = () => {
     if (!isAuthenticated) {
-      toast.error('Please login to enroll in courses')
+      toast.error('Πρέπει να συνδεθείς πρώτα')
       navigate('/login')
       return
     }
@@ -71,7 +74,7 @@ const CourseDetails = () => {
         <div className="flex justify-center items-center h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading course details...</p>
+            <p className="mt-4 text-gray-600">Φόρτωση μαθήματος...</p>
           </div>
         </div>
       </div>
@@ -85,9 +88,9 @@ const CourseDetails = () => {
         <Navbar />
         <div className="max-w-4xl mx-auto px-4 py-20 text-center">
           <div className="text-6xl mb-4">😅</div>
-          <p className="text-red-600 text-xl">Course not found</p>
+          <p className="text-red-600 text-xl">Το μάθημα δεν βρέθηκε</p>
           <button onClick={() => navigate('/courses')} className="btn-primary mt-4">
-            Back to Courses
+            Επιστροφή στα Μαθήματα
           </button>
         </div>
       </div>
@@ -112,7 +115,7 @@ const CourseDetails = () => {
           onClick={() => navigate('/courses')}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
         >
-          <FaArrowLeft /> Back to Courses
+          <FaArrowLeft /> Επιστροφή στα Μαθήματα
         </button>
 
         {/* Course Header */}
@@ -132,48 +135,78 @@ const CourseDetails = () => {
           {/* Course Info */}
           <div className="flex flex-wrap gap-6 text-sm text-gray-600">
             <span className="flex items-center gap-2">
-              <FaUser /> {course.instructor_name || 'Unknown Instructor'}
+              <FaUser /> {course.instructor_name || 'Άγνωστος Instructor'}
             </span>
             <span className="flex items-center gap-2">
-              <FaBook /> {course.category || 'General'}
+              <FaBook /> {course.category || 'Γενικά'}
             </span>
             <span className="flex items-center gap-2">
-              <FaClock /> Created: {new Date(course.created_at).toLocaleDateString()}
+              <FaClock /> Δημιουργία: {new Date(course.created_at).toLocaleDateString('el-GR')}
             </span>
           </div>
         </div>
 
-        {/* Actions */}
+        {/* ===== ACTIONS ===== */}
         <div className="flex flex-wrap gap-4">
-          {/* Enroll Button */}
-          {isEnrolled ? (
-            <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg">
-              <FaCheckCircle /> Already Enrolled
-            </div>
-          ) : (
-            <button
-              onClick={handleEnroll}
-              disabled={isEnrolling}
-              className="btn-primary px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isEnrolling ? (
-                <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Enrolling...
-                </span>
+          {/* ===== STUDENT ACTIONS ===== */}
+          {isAuthenticated && user?.role === 'student' && (
+            <>
+              {isEnrolled ? (
+                <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg">
+                  <FaCheckCircle /> Είστε ήδη εγγεγραμμένος σε αυτό το μάθημα
+                </div>
+              ) : isPending ? (
+                <div className="flex items-center gap-2 text-yellow-600 bg-yellow-50 px-4 py-2 rounded-lg">
+                  ⏳ Το αίτημά σας εκκρεμεί προς έγκριση
+                </div>
               ) : (
-                'Enroll Now'
+                <button
+                  onClick={handleEnroll}
+                  disabled={isEnrolling}
+                  className="btn-primary px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isEnrolling ? (
+                    <span className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Αποστολή...
+                    </span>
+                  ) : (
+                    'Αίτημα Εγγραφής'
+                  )}
+                </button>
               )}
+            </>
+          )}
+
+          {/* ===== INSTRUCTOR ACTIONS ===== */}
+          {isAuthenticated && user?.role === 'instructor' && (
+            <>
+              <Link
+                to={`/instructor/courses/${course.id}/pending`}
+                className="btn-secondary px-6 py-2.5 flex items-center gap-2"
+              >
+                📨 Διαχείριση Αιτημάτων
+              </Link>
+            </>
+          )}
+
+          {/* ===== NON-AUTHENTICATED ===== */}
+          {!isAuthenticated && (
+            <button
+              onClick={() => navigate('/login')}
+              className="btn-primary px-6 py-2.5"
+            >
+              Συνδεθείτε για εγγραφή
             </button>
           )}
 
-          {/* Start Learning (only if enrolled) */}
+          {/* ===== START LEARNING (μόνο αν είναι εγγεγραμμένος) ===== */}
           {isEnrolled && (
             <Link
               to={`/courses/${course.id}/learn`}
               className="btn-secondary px-6 py-2.5"
             >
-              Start Learning
+              Ξεκινήστε το Μάθημα
             </Link>
           )}
         </div>
@@ -181,7 +214,7 @@ const CourseDetails = () => {
         {/* Coming Soon */}
         <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
           <p className="text-sm">
-            📝 Lessons and quizzes coming soon! Enroll to access all content.
+            📝 Οι ενότητες και τα quizzes θα εμφανιστούν σύντομα!
           </p>
         </div>
       </div>
