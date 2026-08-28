@@ -9,6 +9,7 @@ import {
   CourseDetails,
   Quiz,
   CoursePlayer,
+  InstructorPending,
 } from './pages'
 import { ProtectedRoute } from './components'
 import './App.css'
@@ -60,6 +61,15 @@ function App() {
                 <Quiz />
               </ProtectedRoute>
             }
+          />
+
+          <Route
+             path="/instructor/courses/:courseId/pending"
+             element={
+             <ProtectedRoute>
+            <InstructorPending />
+            </ProtectedRoute>
+           }
           />
 
           <Route path="*" element={<h1>404 - Η σελίδα δεν βρέθηκε</h1>} />
