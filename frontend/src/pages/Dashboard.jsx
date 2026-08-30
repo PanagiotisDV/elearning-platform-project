@@ -8,15 +8,20 @@ import { getMyEnrollments } from '../api'
 const Dashboard = () => {
   const { user } = useAuth()
 
-  // Φόρτωση εγγραφών
-  const { data: enrollments = [], isLoading } = useQuery({
-    queryKey: ['enrollments'],
+    const { data: enrollments = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['dashboardEnrollments'],
     queryFn: getMyEnrollments,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 
+  // ===== DEBUG LOGS =====
+  console.log('🔍 Dashboard - Enrollments:', enrollments)
+  console.log('🔍 Dashboard - Total courses:', enrollments.length)
+
   // Υπολογισμός στατιστικών
-  const totalCourses = enrollments.length
+  const totalCourses = enrollments.filter(e => e.status === 'active' || e.status === 'completed').length
   const completedCourses = enrollments.filter(e => e.status === 'completed').length
   const totalProgress = enrollments.reduce((sum, e) => sum + (e.progress_percentage || 0), 0)
   const averageProgress = totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0
@@ -83,7 +88,7 @@ const Dashboard = () => {
               <p className="text-gray-600 text-sm">Ανακάλυψε νέα μαθήματα</p>
             </div>
           </Link>
-          <Link to="/courses" className="card bg-white shadow-md hover:shadow-lg transition-shadow flex items-center gap-4">
+          <Link to="/my-courses" className="card bg-white shadow-md hover:shadow-lg transition-shadow flex items-center gap-4">
             <div className="text-4xl">📚</div>
             <div>
               <h3 className="text-lg font-semibold">Τα Μαθήματά Μου</h3>

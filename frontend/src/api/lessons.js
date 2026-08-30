@@ -29,12 +29,3 @@ export const updateProgress = async (lessonId, progressData) => {
   const response = await apiClient.put(`/api/lessons/${lessonId}/progress`, progressData)
   return response.data
 }
-
-// 4. Λήψη προόδου σε ενότητα
-export const getLessonProgress = async (lessonId) => {
-  /**
-   * Παίρνει την πρόοδο του μαθητή σε μια ενότητα
-  */
-  const response = await apiClient.get(`/api/lessons/${lessonId}/progress`)
-  return response.data
-}

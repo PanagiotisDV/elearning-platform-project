@@ -9,6 +9,7 @@ from datetime import datetime
 from enum import Enum
 
 class EnrollmentStatus(str, Enum):
+    PENDING = "pending"    
     ACTIVE = "active"
     COMPLETED = "completed"
     DROPPED = "dropped"
@@ -21,7 +22,7 @@ class EnrollmentResponse(BaseModel):
     id: int
     user_id: int
     course_id: int
-    status: EnrollmentStatus
+    status: EnrollmentStatus = Field(default=EnrollmentStatus.PENDING)
     progress_percentage: int
     enrolled_at: datetime
     completed_at: Optional[datetime]

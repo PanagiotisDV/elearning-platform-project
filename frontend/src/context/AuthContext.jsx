@@ -48,6 +48,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setIsLoading(true)
     try {
+       localStorage.removeItem('access_token')
+       localStorage.removeItem('refresh_token')
       const data = await apiLogin({ email, password })
       const userData = await getCurrentUser()
       setUser(userData)
