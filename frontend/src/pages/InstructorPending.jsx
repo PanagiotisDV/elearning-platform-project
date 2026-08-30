@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getPendingEnrollments, approveEnrollment, rejectEnrollment } from '../api'
 import { Navbar } from '../components'
-import { FaCheck, FaTimes, FaUser, FaArrowLeft } from 'react-icons/fa'
+import { FaCheck, FaTimes, FaUser, FaArrowLeft, FaEnvelope } from 'react-icons/fa'
 import toast from 'react-hot-toast'
 
 const InstructorPending = () => {
@@ -120,22 +120,36 @@ const InstructorPending = () => {
                   key={enrollment.id}
                   className="bg-white rounded-lg shadow-md p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:shadow-lg transition-shadow"
                 >
+                  {/* ===== ΠΛΗΡΟΦΟΡΙΕΣ ΧΡΗΣΤΗ ===== */}
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl">
                       <FaUser />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">
+                      {/* ΟΝΟΜΑ ΧΡΗΣΤΗ */}
+                      <p className="font-semibold text-gray-900 text-lg">
                         {enrollment.user?.full_name || `Χρήστης #${enrollment.user_id}`}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        Αίτημα: {new Date(enrollment.enrolled_at).toLocaleDateString('el-GR')}
+                      
+                      {/* EMAIL ΧΡΗΣΤΗ */}
+                      <p className="text-sm text-gray-500 flex items-center gap-1">
+                        <FaEnvelope className="text-xs" />
+                        {enrollment.user?.email || 'Δεν υπάρχει email'}
                       </p>
-                      <p className="text-sm text-yellow-600">
+                      
+                      {/* ΗΜΕΡΟΜΗΝΙΑ ΑΙΤΗΜΑΤΟΣ */}
+                      <p className="text-sm text-gray-400 mt-1">
+                        Αίτημα: {new Date(enrollment.enrolled_at).toLocaleDateString('el-GR')} στις {new Date(enrollment.enrolled_at).toLocaleTimeString('el-GR')}
+                      </p>
+                      
+                      {/* ΚΑΤΑΣΤΑΣΗ */}
+                      <p className="text-sm text-yellow-600 mt-1">
                         ⏳ Εκκρεμεί έγκριση
                       </p>
                     </div>
                   </div>
+                  
+                  {/* ===== ΚΟΥΜΠΙΑ ΕΝΕΡΓΕΙΑΣ ===== */}
                   <div className="flex gap-2 w-full sm:w-auto">
                     <button
                       onClick={() => handleApprove(enrollment.id)}
