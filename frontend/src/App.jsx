@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { ProtectedRoute } from './components'
@@ -12,6 +13,7 @@ import {
   Quiz,
   InstructorPending,
   MyCourses,
+  InstructorCourses,  
 } from './pages'
 import './App.css'
 
@@ -66,6 +68,15 @@ function App() {
           />
 
           {/* ===== INSTRUCTOR ROUTES ===== */}
+          <Route
+            path="/instructor/courses"
+            element={
+              <ProtectedRoute>
+                <InstructorCourses />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/instructor/courses/:courseId/pending"
             element={
