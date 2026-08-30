@@ -30,10 +30,17 @@ const Navbar = () => {
               Courses
             </Link>
 
-            {/* ===== MY COURSES (Μόνο για authenticated) ===== */}
-            {isAuthenticated && (
+            {/* ===== MY COURSES (ΜΟΝΟ για students) ===== */}
+            {isAuthenticated && user?.role === 'student' && (
               <Link to="/my-courses" className="text-sm text-gray-600 hover:text-gray-900">
                 Τα Μαθήματά Μου
+              </Link>
+            )}
+
+            {/* ===== INSTRUCTOR COURSES (ΜΟΝΟ για instructors) ===== */}
+            {isAuthenticated && user?.role === 'instructor' && (
+              <Link to="/instructor/courses" className="text-sm text-gray-600 hover:text-gray-900">
+                📚 Διαχείριση
               </Link>
             )}
 

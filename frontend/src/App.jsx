@@ -13,7 +13,8 @@ import {
   Quiz,
   InstructorPending,
   MyCourses,
-  InstructorCourses,  
+  InstructorCourses,
+  InstructorCourseForm,
 } from './pages'
 import './App.css'
 
@@ -73,6 +74,24 @@ function App() {
             element={
               <ProtectedRoute>
                 <InstructorCourses />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/instructor/courses/new"
+            element={
+              <ProtectedRoute>
+                <InstructorCourseForm />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/instructor/courses/:courseId/edit"
+            element={
+              <ProtectedRoute>
+                <InstructorCourseForm />
               </ProtectedRoute>
             }
           />

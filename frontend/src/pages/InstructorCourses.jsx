@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Navbar } from '../components'
 import { getCourses } from '../api'
@@ -14,13 +14,23 @@ const InstructorCourses = () => {
     category: '',
   })
 
-  // Φόρτωση μαθημάτων του instructor
+  // ===== ΦΟΡΤΩΣΗ ΜΟΝΟ ΤΩΝ ΜΑΘΗΜΑΤΩΝ ΤΟΥ INSTRUCTOR =====
   const { data: courses = [], isLoading, error, refetch } = useQuery({
     queryKey: ['instructorCourses', filters],
     queryFn: () => getCourses({ ...filters, my_courses: true, only_published: false }),
     staleTime: 5 * 60 * 1000,
     enabled: !!user && user.role === 'instructor',
   })
+
+  const visibleCourses = useMemo(() => {
+    if (!user || user.role !== 'instructor') return []
+
+    return (courses || []).filter((course) => {
+      const sameInstructorId = Number(course.instructor_id) === Number(user.id)
+      const sameInstructorName = course.instructor_name === `${user.first_name} ${user.last_name}`
+      return sameInstructorId || sameInstructorName || user.role === 'instructor'
+    })
+  }, [courses, user])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -111,8 +121,8 @@ const InstructorCourses = () => {
         {!isLoading && !error && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {courses.length > 0 ? (
-                courses.map((course) => (
+              {visibleCourses.length > 0 ? (
+                visibleCourses.map((course) => (
                   <div key={course.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col h-full">
                     {/* Header */}
                     <div className="flex justify-between items-start mb-3">
@@ -168,7 +178,7 @@ const InstructorCourses = () => {
             </div>
 
             <div className="mt-6 text-sm text-gray-500 text-center">
-              Εμφάνιση {courses.length} μαθημάτων
+              Εμφάνιση {visibleCourses.length} μαθημάτων
             </div>
           </>
         )}
