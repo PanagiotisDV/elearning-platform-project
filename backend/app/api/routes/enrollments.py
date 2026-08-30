@@ -52,7 +52,7 @@ async def enroll_in_course(
             detail="Course is not published yet"
         )
     
-    # 4. Έλεγχος ότι δεν υπάρχει ήδη εγγραφή (σε οποιαδήποτε κατάσταση)
+    # 4. Έλεγχος ότι δεν υπάρχει ήδη εγγραφή
     result = await db.execute(
         select(Enrollment).where(
             Enrollment.user_id == current_user.id,
@@ -146,16 +146,37 @@ async def get_pending_enrollments(
             detail="You can only view pending enrollments for your own courses"
         )
     
-    # 3. Λήψη pending εγγραφών
+    # 3. Λήψη pending εγγραφών με τα στοιχεία των χρηστών
     result = await db.execute(
-        select(Enrollment)
+        select(Enrollment, User)
+        .join(User, Enrollment.user_id == User.id)
         .where(Enrollment.course_id == course_id)
         .where(Enrollment.status == EnrollmentStatus.PENDING)
         .order_by(Enrollment.enrolled_at.desc())
     )
-    enrollments = result.scalars().all()
     
-    return enrollments
+    # 4. Δημιουργία response με τα στοιχεία του χρήστη
+    pending_list = []
+    for enrollment, user in result:
+        enrollment_data = {
+            "id": enrollment.id,
+            "user_id": enrollment.user_id,
+            "course_id": enrollment.course_id,
+            "status": enrollment.status,
+            "progress_percentage": enrollment.progress_percentage,
+            "enrolled_at": enrollment.enrolled_at,
+            "completed_at": enrollment.completed_at,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "full_name": f"{user.first_name} {user.last_name}",
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+            }
+        }
+        pending_list.append(enrollment_data)
+    
+    return pending_list
 
 # ========================================
 # INSTRUCTOR: ΕΓΚΡΙΣΗ ΕΓΓΡΑΦΗΣ
